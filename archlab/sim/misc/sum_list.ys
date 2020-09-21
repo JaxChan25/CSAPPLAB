@@ -1,0 +1,43 @@
+# Execution begins at address 0 
+	.pos 0
+	irmovq stack, %rsp  	# Set up stack pointer
+	call main		# Execute main program
+	halt			# Terminate program 
+	
+# 内存区域，存放数据/链表之类
+# Sample linked list
+.align 8
+ele1:
+    .quad 0x00a
+    .quad ele2
+ele2:
+    .quad 0x0b0
+    .quad ele3
+ele3:
+    .quad 0xc00
+    .quad 0
+# END
+
+main:	
+	irmovq ele1,%rdi  #参数准备
+	call sum_list		# sum_list(ele1)
+	ret
+
+# long sum_list(long i)
+# ele1 in %rdi
+sum_list:	
+	xorq %rax,%rax           #val=0
+loop:
+    mrmovq (%rdi),%r8 #读取node.val值到寄存器r8
+    addq %r8,%rax #将结果加到return val中
+    mrmovq 8(%rdi),%rdi
+    jmp test       #无条件跳转到test
+test:
+    andq %rdi,%rdi      # set CC。这个操作我有点迷惑，用andq来设置CC
+    jne loop
+	ret                  # Return
+
+# Stack starts here and grows to lower addresses.
+# 这里自定义栈开始地址
+	.pos 0x200
+stack:

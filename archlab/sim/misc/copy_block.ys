@@ -1,0 +1,58 @@
+# Execution begins at address 0 
+	.pos 0
+	irmovq stack, %rsp  	# Set up stack pointer
+	call main		# Execute main program
+	halt			# Terminate program 
+	
+# 内存区域，存放数据/链表之类
+.align 8
+# Source block
+src:
+.quad 0x00a
+.quad 0x0b0
+.quad 0xc00
+# Destination block
+dest:
+.quad 0x111
+.quad 0x222
+.quad 0x333
+
+#END
+
+main:	
+	irmovq src,%rdi     #param1
+    irmovq dest,%rsi    #param2
+    irmovq $3,%rdx     #param3
+	call copy_block		# copy_block(src,dest,)
+	ret
+
+# long copy_block(long *src, long *dest, long len)
+# src in %rdi
+# dest in %rsi
+# 3 in %rdx
+copy_block:	
+    pushq %rbx
+    pushq %r9
+    pushq %r10
+	xorq %rax,%rax           #result=0
+    irmovq $8,%r9
+    irmovq $1,%r10
+    jmp test
+loop:
+    mrmovq (%rdi),%rbx        #long val = *src;
+    addq %r9,%rdi            #src++;
+    rmmovq %rbx,(%rsi)        #*dest = val;
+    addq %r9,%rsi            #dest++;
+    xorq %rbx,%rax            #update checksum
+    subq %r10,%rdx           #len--
+test:
+    andq %rdx,%rdx  #set CC
+    jne loop        #Stop when len = 0
+    popq %r10
+    popq %r9
+    popq %rbx
+	ret                         
+
+# Stack starts here and grows to lower addresses.
+	.pos 0x200
+stack:

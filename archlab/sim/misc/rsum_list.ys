@@ -1,0 +1,45 @@
+# Execution begins at address 0 
+	.pos 0
+	irmovq stack, %rsp  	# Set up stack pointer
+	call main		# Execute main program
+	halt			# Terminate program 
+	
+# 内存区域，存放数据/链表之类
+# Sample linked list
+.align 8
+ele1:
+    .quad 0x00a
+    .quad ele2
+ele2:
+    .quad 0x0b0
+    .quad ele3
+ele3:
+    .quad 0xc00
+    .quad 0
+# END
+
+main:	
+	irmovq ele1,%rdi  #参数准备
+	call rsum_list		# rsum_list(ele1)
+	ret
+
+# long rsum_list(long i)
+# ele1 in %rdi
+rsum_list:	
+    pushq %rbx          #自递归，需要保存目前的结果。其实rbx就是存了 上一个node.val
+	xorq %rax,%rax           #return val=0
+    andq %rdi, %rdi
+    je finish
+    mrmovq (%rdi), %rbx  #当前的node.val
+    mrmovq 8(%rdi), %rdi #node = node->next
+    call rsum_list
+    addq %rbx, %rax #在这里仍然会继续往下执行。
+
+finish:
+    popq %rbx            #
+	ret                  # Return
+
+# Stack starts here and grows to lower addresses.
+# 这里自定义栈开始地址
+	.pos 0x200
+stack:
